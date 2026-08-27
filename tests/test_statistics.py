@@ -110,3 +110,90 @@ async def test_returns_tenant_isolated_aggregated_statistics(client, organizatio
         "appointments": {"booked": 1},
         "booking_conversion_rate": 1.0,
     }
+
+
+@pytest.mark.asyncio
+async def test_returns_dashboard_calls_without_cross_tenant_data(client, organization_id):
+    own_call_id = uuid.uuid4()
+    other_organization_id = uuid.uuid4()
+    async with SessionFactory() as session:
+        session.add(Organization(id=other_organization_id, name="Other company"))
+        session.add_all(
+            [
+                Call(
+                    id=own_call_id,
+                    organization_id=uuid.UUID(organization_id),
+                    original_filename="consultation.mp3",
+                    audio_path="own.mp3",
+                    status=CallStatus.COMPLETED,
+                ),
+                Call(
+                    organization_id=other_organization_id,
+                    original_filename="private.mp3",
+                    audio_path="other.mp3",
+                    status=CallStatus.COMPLETED,
+                ),
+            ]
+        )
+        await session.flush()
+        session.add_all(
+            [
+                CallAnalysis(
+                    call_id=own_call_id,
+                    organization_id=uuid.UUID(organization_id),
+                    summary="Клиента записали",
+                    topic="Консультация",
+                    result="resolved",
+                    sentiment="positive",
+                    objections=[],
+                    agreements=["Приём в пятницу"],
+                    next_action=None,
+                    appointment_status=AppointmentStatus.BOOKED,
+                    appointment_datetime="2026-08-28 14:00",
+                    appointment_service="Консультация",
+                    quality_score=92,
+                    model_name="fake",
+                    prompt_version="v1",
+                ),
+                CallMetrics(
+                    call_id=own_call_id,
+                    organization_id=uuid.UUID(organization_id),
+                    duration_seconds=180,
+                    manager_speech_seconds=80,
+                    customer_speech_seconds=90,
+                    unknown_speech_seconds=10,
+                    manager_talk_ratio=0.47,
+                    total_segments=20,
+                ),
+            ]
+        )
+        await session.commit()
+
+    response = client.get(
+        "/api/v1/dashboard/calls?limit=10",
+        headers={"X-Organization-ID": organization_id},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0] | {"created_at": "ignored"} == {
+        "id": str(own_call_id),
+        "original_filename": "consultation.mp3",
+        "status": "completed",
+        "created_at": "ignored",
+        "topic": "Консультация",
+        "result": "resolved",
+        "appointment_status": "booked",
+        "appointment_datetime": "2026-08-28 14:00",
+        "appointment_service": "Консультация",
+        "quality_score": 92,
+        "duration_seconds": 180.0,
+    }
+
+
+def test_serves_dashboard_page(client):
+    response = client.get("/dashboard")
+
+    assert response.status_code == 200
+    assert "Аналитика звонков" in response.text

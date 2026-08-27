@@ -23,6 +23,20 @@ class StatisticsResponse(BaseModel):
     booking_conversion_rate: float | None
 
 
+class DashboardCallResponse(BaseModel):
+    id: uuid.UUID
+    original_filename: str
+    status: CallStatus
+    created_at: datetime
+    topic: str | None
+    result: str | None
+    appointment_status: AppointmentStatus | None
+    appointment_datetime: str | None
+    appointment_service: str | None
+    quality_score: int | None
+    duration_seconds: float | None
+
+
 class CallResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

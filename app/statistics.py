@@ -1,16 +1,48 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import tenant_id
 from app.db import get_session
 from app.models import AppointmentStatus, Call, CallAnalysis, CallMetrics, CallStatus
-from app.schemas import StatisticsResponse
+from app.schemas import DashboardCallResponse, StatisticsResponse
 
 router = APIRouter()
+
+
+@router.get("/api/v1/dashboard/calls", response_model=list[DashboardCallResponse])
+async def get_dashboard_calls(
+    organization_id: Annotated[uuid.UUID, Depends(tenant_id)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> list[DashboardCallResponse]:
+    rows = await session.execute(
+        select(Call, CallAnalysis, CallMetrics)
+        .outerjoin(CallAnalysis, CallAnalysis.call_id == Call.id)
+        .outerjoin(CallMetrics, CallMetrics.call_id == Call.id)
+        .where(Call.organization_id == organization_id)
+        .order_by(Call.created_at.desc())
+        .limit(limit)
+    )
+    return [
+        DashboardCallResponse(
+            id=call.id,
+            original_filename=call.original_filename,
+            status=call.status,
+            created_at=call.created_at,
+            topic=analysis.topic if analysis else None,
+            result=analysis.result if analysis else None,
+            appointment_status=analysis.appointment_status if analysis else None,
+            appointment_datetime=analysis.appointment_datetime if analysis else None,
+            appointment_service=analysis.appointment_service if analysis else None,
+            quality_score=analysis.quality_score if analysis else None,
+            duration_seconds=metrics.duration_seconds if metrics else None,
+        )
+        for call, analysis, metrics in rows
+    ]
 
 
 @router.get("/api/v1/statistics", response_model=StatisticsResponse)

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Аналитика звонков</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">CALL INTELLIGENCE</p>
+        <h1>Аналитика звонков</h1>
+        <p class="subtitle">Результаты разговоров, качество работы и конверсия в запись</p>
+      </div>
+      <form id="tenant-form">
+        <label for="organization-id">Organization ID</label>
+        <div class="tenant-row">
+          <input id="organization-id" required placeholder="UUID организации">
+          <button>Показать</button>
+        </div>
+      </form>
+    </header>
+
+    <p id="message" class="message">Введите ID демонстрационной организации.</p>
+
+    <section id="content" hidden>
+      <div class="kpis">
+        <article><span>Всего звонков</span><strong id="total">—</strong></article>
+        <article><span>Конверсия в запись</span><strong id="conversion">—</strong></article>
+        <article><span>Средняя оценка</span><strong id="quality">—</strong></article>
+        <article><span>Средняя длительность</span><strong id="duration">—</strong></article>
+      </div>
+
+      <div class="panels">
+        <article class="panel">
+          <div class="panel-title"><h2>Исходы записи</h2><span>завершённые звонки</span></div>
+          <div id="appointments" class="bars"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-title"><h2>Статусы обработки</h2><span>все звонки</span></div>
+          <div id="statuses" class="bars"></div>
+        </article>
+      </div>
+
+      <article class="panel calls-panel">
+        <div class="panel-title"><h2>Последние звонки</h2><span>до 20 записей</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Звонок</th><th>Тема</th><th>Запись</th><th>Качество</th><th>Дата</th></tr></thead>
+            <tbody id="calls"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+  <script src="/static/dashboard.js" defer></script>
+</body>
+</html>
