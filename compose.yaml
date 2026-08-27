@@ -8,6 +8,15 @@ services:
       postgres:
         condition: service_healthy
 
+  seed:
+    build: .
+    command: ["python", "-m", "app.seed"]
+    environment:
+      APP_DATABASE_URL: postgresql+asyncpg://calls:calls@postgres:5432/calls
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
   api:
     build: .
     environment:
@@ -23,6 +32,8 @@ services:
       postgres:
         condition: service_healthy
       migrate:
+        condition: service_completed_successfully
+      seed:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
@@ -46,8 +57,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-      ollama:
-        condition: service_started
+      ollama-init:
+        condition: service_completed_successfully
 
   redis:
     image: redis:7-alpine
@@ -62,6 +73,18 @@ services:
 
   ollama:
     image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+
+  ollama-init:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama pull qwen3:8b && ollama pull nomic-embed-text"]
+    depends_on:
+      ollama:
+        condition: service_started
     volumes:
       - ollama_data:/root/.ollama
 

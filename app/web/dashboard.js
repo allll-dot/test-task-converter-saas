@@ -54,5 +54,6 @@ form.addEventListener("submit", async event => {
   try { await loadDashboard(input.value.trim()); } catch (error) { message.textContent = error.message; }
 });
 
-const savedId = localStorage.getItem("organizationId");
-if (savedId) { input.value = savedId; loadDashboard(savedId).catch(error => { message.textContent = error.message; }); }
+const savedId = localStorage.getItem("organizationId") ?? "00000000-0000-0000-0000-000000000001";
+input.value = savedId;
+loadDashboard(savedId).catch(error => { message.textContent = error.message; });

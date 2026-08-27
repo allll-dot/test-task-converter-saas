@@ -1,3 +1,4 @@
+import uuid
 from functools import lru_cache
 from pathlib import Path
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3:8b"
     ollama_embedding_model: str = "nomic-embed-text"
     embedding_dimensions: int = 768
+    demo_organization_id: uuid.UUID = uuid.UUID("00000000-0000-0000-0000-000000000001")
     celery_broker_url: str = "redis://redis:6379/0"
     celery_result_backend: str = "redis://redis:6379/1"
 
