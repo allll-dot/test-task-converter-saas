@@ -11,6 +11,16 @@ class HealthResponse(BaseModel):
     status: str
 
 
+class StatisticsResponse(BaseModel):
+    total_calls: int
+    completed_calls: int
+    failed_calls: int
+    average_duration_seconds: float | None
+    average_quality_score: float | None
+    statuses: dict[str, int]
+    results: dict[str, int]
+
+
 class CallResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
