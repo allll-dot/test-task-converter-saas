@@ -13,6 +13,8 @@ services:
     environment:
       APP_DATABASE_URL: postgresql+asyncpg://calls:calls@postgres:5432/calls
       APP_UPLOAD_DIR: /data/uploads
+      APP_CELERY_BROKER_URL: redis://redis:6379/0
+      APP_CELERY_RESULT_BACKEND: redis://redis:6379/1
     ports:
       - "8000:8000"
     volumes:
@@ -22,6 +24,45 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: ["celery", "-A", "app.celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=1"]
+    environment:
+      APP_DATABASE_URL: postgresql+asyncpg://calls:calls@postgres:5432/calls
+      APP_UPLOAD_DIR: /data/uploads
+      APP_CELERY_BROKER_URL: redis://redis:6379/0
+      APP_CELERY_RESULT_BACKEND: redis://redis:6379/1
+      APP_OLLAMA_URL: http://ollama:11434
+      APP_OLLAMA_MODEL: qwen3:8b
+    volumes:
+      - call_audio:/data/uploads
+      - whisper_models:/root/.cache/huggingface
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis_data:/data
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
 
   postgres:
     image: postgres:16-alpine
@@ -40,3 +81,6 @@ services:
 volumes:
   call_audio:
   postgres_data:
+  redis_data:
+  ollama_data:
+  whisper_models:

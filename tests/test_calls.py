@@ -1,7 +1,7 @@
 import uuid
 
 
-def test_uploads_mp3_and_returns_pending_call(client, organization_id):
+def test_uploads_mp3_and_enqueues_processing(client, organization_id, task_dispatcher):
     response = client.post(
         "/api/v1/calls",
         headers={"X-Organization-ID": organization_id},
@@ -13,6 +13,7 @@ def test_uploads_mp3_and_returns_pending_call(client, organization_id):
     assert payload["organization_id"] == organization_id
     assert payload["original_filename"] == "customer-call.mp3"
     assert payload["status"] == "pending"
+    assert [str(call_id) for call_id in task_dispatcher.enqueued] == [payload["id"]]
 
 
 def test_rejects_non_mp3_file(client, organization_id):
