@@ -3,7 +3,7 @@ import uuid
 import pytest
 
 from app.db import SessionFactory
-from app.models import Call, CallAnalysis, CallMetrics, CallStatus, Organization
+from app.models import AppointmentStatus, Call, CallAnalysis, CallMetrics, CallStatus, Organization
 
 
 @pytest.mark.asyncio
@@ -55,6 +55,9 @@ async def test_returns_tenant_isolated_aggregated_statistics(client, organizatio
                     objections=[],
                     agreements=["Оформить заказ"],
                     next_action=None,
+                    appointment_status=AppointmentStatus.BOOKED,
+                    appointment_datetime="2026-08-30 15:00",
+                    appointment_service="Первичный приём",
                     quality_score=80,
                     model_name="fake",
                     prompt_version="v1",
@@ -79,6 +82,9 @@ async def test_returns_tenant_isolated_aggregated_statistics(client, organizatio
                     objections=[],
                     agreements=[],
                     next_action=None,
+                    appointment_status=AppointmentStatus.CANCELLED,
+                    appointment_datetime=None,
+                    appointment_service="Чужая услуга",
                     quality_score=10,
                     model_name="fake",
                     prompt_version="v1",
@@ -101,4 +107,6 @@ async def test_returns_tenant_isolated_aggregated_statistics(client, organizatio
         "average_quality_score": 80.0,
         "statuses": {"completed": 1, "failed": 1},
         "results": {"sale": 1},
+        "appointments": {"booked": 1},
+        "booking_conversion_rate": 1.0,
     }

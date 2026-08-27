@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import tenant_id
 from app.db import get_session
-from app.models import Call, CallAnalysis, CallMetrics, CallStatus
+from app.models import AppointmentStatus, Call, CallAnalysis, CallMetrics, CallStatus
 from app.schemas import StatisticsResponse
 
 router = APIRouter()
@@ -51,6 +51,25 @@ async def get_statistics(
     )
     results = {result: count for result, count in result_rows}
 
+    appointment_rows = await session.execute(
+        select(CallAnalysis.appointment_status, func.count(CallAnalysis.call_id))
+        .join(Call, Call.id == CallAnalysis.call_id)
+        .where(
+            Call.organization_id == organization_id,
+            Call.status == CallStatus.COMPLETED,
+        )
+        .group_by(CallAnalysis.appointment_status)
+    )
+    appointments = {status.value: count for status, count in appointment_rows}
+    booking_successes = appointments.get(AppointmentStatus.BOOKED.value, 0) + appointments.get(
+        AppointmentStatus.RESCHEDULED.value, 0
+    )
+    booking_attempts = (
+        booking_successes
+        + appointments.get(AppointmentStatus.NOT_BOOKED.value, 0)
+        + appointments.get(AppointmentStatus.CANCELLED.value, 0)
+    )
+
     return StatisticsResponse(
         total_calls=sum(statuses.values()),
         completed_calls=statuses.get(CallStatus.COMPLETED.value, 0),
@@ -59,4 +78,8 @@ async def get_statistics(
         average_quality_score=float(average_quality) if average_quality is not None else None,
         statuses=statuses,
         results=results,
+        appointments=appointments,
+        booking_conversion_rate=(
+            round(booking_successes / booking_attempts, 4) if booking_attempts else None
+        ),
     )

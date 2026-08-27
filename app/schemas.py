@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models import CallStatus, Speaker
+from app.models import AppointmentStatus, CallStatus, Speaker
 
 
 class HealthResponse(BaseModel):
@@ -19,6 +19,8 @@ class StatisticsResponse(BaseModel):
     average_quality_score: float | None
     statuses: dict[str, int]
     results: dict[str, int]
+    appointments: dict[str, int]
+    booking_conversion_rate: float | None
 
 
 class CallResponse(BaseModel):
@@ -73,6 +75,9 @@ class CallAnalysisData(BaseModel):
     objections: list[str]
     agreements: list[str]
     next_action: str | None
+    appointment_status: AppointmentStatus
+    appointment_datetime: str | None
+    appointment_service: str | None
     quality_score: int = Field(ge=0, le=100)
 
 

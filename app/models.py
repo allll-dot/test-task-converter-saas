@@ -87,6 +87,15 @@ class CallMetrics(Base):
     call: Mapped[Call] = relationship(back_populates="metrics")
 
 
+class AppointmentStatus(str, enum.Enum):
+    BOOKED = "booked"
+    NOT_BOOKED = "not_booked"
+    RESCHEDULED = "rescheduled"
+    CANCELLED = "cancelled"
+    NOT_APPLICABLE = "not_applicable"
+    UNKNOWN = "unknown"
+
+
 class CallAnalysis(Base):
     __tablename__ = "call_analyses"
 
@@ -99,6 +108,11 @@ class CallAnalysis(Base):
     objections: Mapped[list[str]] = mapped_column(JSON)
     agreements: Mapped[list[str]] = mapped_column(JSON)
     next_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    appointment_status: Mapped[AppointmentStatus] = mapped_column(
+        Enum(AppointmentStatus, native_enum=False), default=AppointmentStatus.UNKNOWN
+    )
+    appointment_datetime: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    appointment_service: Mapped[str | None] = mapped_column(String(300), nullable=True)
     quality_score: Mapped[int] = mapped_column(Integer)
     model_name: Mapped[str] = mapped_column(String(200))
     prompt_version: Mapped[str] = mapped_column(String(50))

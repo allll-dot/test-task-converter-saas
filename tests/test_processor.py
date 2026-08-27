@@ -5,7 +5,15 @@ import pytest
 from sqlalchemy import select
 
 from app.db import SessionFactory
-from app.models import Call, CallAnalysis, CallMetrics, CallStatus, Speaker, TranscriptSegment
+from app.models import (
+    AppointmentStatus,
+    Call,
+    CallAnalysis,
+    CallMetrics,
+    CallStatus,
+    Speaker,
+    TranscriptSegment,
+)
 from app.schemas import CallAnalysisData, TranscriptData, TranscriptSegmentData
 from app.services.processor import CallProcessor
 
@@ -43,6 +51,9 @@ class FakeAnalysisProvider:
             objections=["Высокая стоимость"],
             agreements=[],
             next_action=None,
+            appointment_status=AppointmentStatus.NOT_BOOKED,
+            appointment_datetime=None,
+            appointment_service="Консультация",
             quality_score=70,
         )
 
@@ -71,6 +82,7 @@ async def test_processes_call_and_persists_derived_data(client, organization_id)
         assert metrics.manager_talk_ratio == pytest.approx(3 / 6.5, abs=0.0001)
         assert analysis.objections == ["Высокая стоимость"]
         assert analysis.model_name == "fake-local-llm"
+        assert analysis.appointment_status == AppointmentStatus.NOT_BOOKED
 
     response = client.get(
         f"/api/v1/calls/{created['id']}", headers={"X-Organization-ID": organization_id}
@@ -78,3 +90,4 @@ async def test_processes_call_and_persists_derived_data(client, organization_id)
     assert response.status_code == 200
     assert response.json()["metrics"]["total_segments"] == 2
     assert response.json()["analysis"]["topic"] == "Стоимость"
+    assert response.json()["analysis"]["appointment_status"] == "not_booked"
