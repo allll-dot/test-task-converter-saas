@@ -2,6 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -70,6 +71,18 @@ class TranscriptSegment(Base):
     text: Mapped[str] = mapped_column(Text)
 
     call: Mapped[Call] = relationship(back_populates="transcript_segments")
+
+
+class TranscriptChunk(Base):
+    __tablename__ = "transcript_chunks"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    call_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("calls.id"), index=True)
+    start_seconds: Mapped[float] = mapped_column(Float)
+    end_seconds: Mapped[float] = mapped_column(Float)
+    text: Mapped[str] = mapped_column(Text)
+    embedding: Mapped[list[float]] = mapped_column(Vector(768))
 
 
 class CallMetrics(Base):

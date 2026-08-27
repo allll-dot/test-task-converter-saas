@@ -99,3 +99,20 @@ class CallDetailResponse(CallResponse):
     transcript: list[TranscriptSegmentData]
     metrics: CallMetricsData | None
     analysis: CallAnalysisData | None
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=1000)
+    call_id: uuid.UUID | None = None
+
+
+class RagSource(BaseModel):
+    call_id: uuid.UUID
+    start_seconds: float
+    end_seconds: float
+    text: str
+
+
+class AskResponse(BaseModel):
+    answer: str
+    sources: list[RagSource]

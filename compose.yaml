@@ -37,6 +37,7 @@ services:
       APP_CELERY_RESULT_BACKEND: redis://redis:6379/1
       APP_OLLAMA_URL: http://ollama:11434
       APP_OLLAMA_MODEL: qwen3:8b
+      APP_OLLAMA_EMBEDDING_MODEL: nomic-embed-text
     volumes:
       - call_audio:/data/uploads
       - whisper_models:/root/.cache/huggingface
@@ -65,7 +66,7 @@ services:
       - ollama_data:/root/.ollama
 
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_DB: calls
       POSTGRES_USER: calls

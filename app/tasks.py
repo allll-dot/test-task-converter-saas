@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import uuid
 
 from sqlalchemy import pool
@@ -8,7 +9,11 @@ from app.celery_app import celery_app
 from app.config import get_settings
 from app.services.faster_whisper import FasterWhisperProvider
 from app.services.ollama import OllamaAnalysisProvider
+from app.services.ollama_rag import OllamaEmbeddingProvider
 from app.services.processor import CallProcessor
+from app.services.rag import TranscriptIndexer
+
+logger = logging.getLogger(__name__)
 
 
 async def _process_call(call_id: uuid.UUID) -> None:
@@ -29,6 +34,15 @@ async def _process_call(call_id: uuid.UUID) -> None:
     try:
         async with session_factory() as session:
             await processor.process(call_id, session)
+            indexer = TranscriptIndexer(
+                OllamaEmbeddingProvider(settings.ollama_url, settings.ollama_embedding_model),
+                dimensions=settings.embedding_dimensions,
+            )
+            try:
+                await indexer.index(call_id, session)
+            except RuntimeError:
+                # RAG is optional: embedding downtime must not invalidate call analytics.
+                logger.warning("RAG indexing failed for call %s", call_id, exc_info=True)
     finally:
         await engine.dispose()
 

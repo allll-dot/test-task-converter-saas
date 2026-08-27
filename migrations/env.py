@@ -2,6 +2,7 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
@@ -17,20 +18,31 @@ config.set_main_option("sqlalchemy.url", get_settings().database_url)
 target_metadata = Base.metadata
 
 
+def compare_column_type(context, inspected_column, metadata_column, inspected_type, metadata_type):
+    # SQLite reflects VECTOR as NUMERIC; production PostgreSQL compares the real type.
+    if context.dialect.name == "sqlite" and isinstance(metadata_type, Vector):
+        return False
+    return None
+
+
 def run_migrations_offline() -> None:
     context.configure(
         url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        compare_type=True,
+        compare_type=compare_column_type,
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=compare_column_type,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
