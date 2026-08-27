@@ -32,9 +32,7 @@ def test_calculates_speaker_durations_and_ratio():
 
 def test_ratio_is_unknown_without_resolved_speakers():
     transcript = TranscriptData(
-        segments=[
-            TranscriptSegmentData(start_seconds=1, end_seconds=3, text="Неизвестный спикер")
-        ]
+        segments=[TranscriptSegmentData(start_seconds=1, end_seconds=3, text="Неизвестный спикер")]
     )
 
     metrics = MetricsCalculator().calculate(transcript)

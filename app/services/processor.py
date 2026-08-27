@@ -37,7 +37,9 @@ class CallProcessor:
             analysis = self.analysis.analyze(transcript)
 
             # Reprocessing replaces derived data instead of duplicating it.
-            await session.execute(delete(TranscriptSegment).where(TranscriptSegment.call_id == call.id))
+            await session.execute(
+                delete(TranscriptSegment).where(TranscriptSegment.call_id == call.id)
+            )
             await session.execute(delete(CallMetrics).where(CallMetrics.call_id == call.id))
             await session.execute(delete(CallAnalysis).where(CallAnalysis.call_id == call.id))
 
@@ -51,16 +53,20 @@ class CallProcessor:
                     for segment in transcript.segments
                 ]
             )
-            session.add(CallMetrics(
-                organization_id=call.organization_id, call_id=call.id, **metrics.model_dump()
-            ))
-            session.add(CallAnalysis(
-                organization_id=call.organization_id,
-                call_id=call.id,
-                model_name=self.analysis.model_name,
-                prompt_version=self.prompt_version,
-                **analysis.model_dump(),
-            ))
+            session.add(
+                CallMetrics(
+                    organization_id=call.organization_id, call_id=call.id, **metrics.model_dump()
+                )
+            )
+            session.add(
+                CallAnalysis(
+                    organization_id=call.organization_id,
+                    call_id=call.id,
+                    model_name=self.analysis.model_name,
+                    prompt_version=self.prompt_version,
+                    **analysis.model_dump(),
+                )
+            )
             call.status = CallStatus.COMPLETED
             await session.commit()
         except Exception as exc:

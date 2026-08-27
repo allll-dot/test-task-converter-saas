@@ -4,7 +4,6 @@ from urllib.request import Request, urlopen
 
 from app.schemas import CallAnalysisData, TranscriptData
 
-
 SYSTEM_PROMPT = """Ты анализируешь телефонный звонок на русском языке.
 Используй только факты из транскрипта. Не придумывай отсутствующие сведения.
 Если результат звонка неизвестен, используй unknown. Пустые множества возвращай
@@ -26,8 +25,7 @@ class OllamaAnalysisProvider:
 
     def analyze(self, transcript: TranscriptData) -> CallAnalysisData:
         transcript_text = "\n".join(
-            f"[{part.start_seconds:.2f}-{part.end_seconds:.2f}] "
-            f"{part.speaker.value}: {part.text}"
+            f"[{part.start_seconds:.2f}-{part.end_seconds:.2f}] {part.speaker.value}: {part.text}"
             for part in transcript.segments
         )
         payload = {
@@ -47,7 +45,7 @@ class OllamaAnalysisProvider:
             method="POST",
         )
         try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:  # noqa: S310
+            with urlopen(request, timeout=self.timeout_seconds) as response:
                 body = json.load(response)
         except (HTTPError, URLError, TimeoutError) as exc:
             raise RuntimeError(f"Local Ollama request failed: {exc}") from exc

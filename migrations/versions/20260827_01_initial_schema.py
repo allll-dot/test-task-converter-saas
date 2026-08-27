@@ -2,8 +2,8 @@
 
 from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision: str = "20260827_01"
 down_revision: str | None = None
@@ -16,7 +16,9 @@ def upgrade() -> None:
         "organizations",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=200), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -27,11 +29,15 @@ def upgrade() -> None:
         sa.Column("audio_path", sa.String(length=1000), nullable=False),
         sa.Column(
             "status",
-            sa.Enum("PENDING", "PROCESSING", "COMPLETED", "FAILED", name="callstatus", native_enum=False),
+            sa.Enum(
+                "PENDING", "PROCESSING", "COMPLETED", "FAILED", name="callstatus", native_enum=False
+            ),
             nullable=False,
         ),
         sa.Column("error_message", sa.String(length=1000), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
