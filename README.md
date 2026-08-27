@@ -12,6 +12,9 @@ docker compose up --build
 
 Swagger будет доступен по адресу `http://localhost:8000/docs`.
 
+Перед запуском API сервис `migrate` выполняет `alembic upgrade head`. Схема БД
+управляется миграциями и не создаётся приложением во время старта.
+
 Для загрузки используется демонстрационный заголовок `X-Organization-ID`.
 Это граница tenant в прототипе, а не замена production-аутентификации.
 
@@ -21,6 +24,7 @@ Swagger будет доступен по адресу `http://localhost:8000/doc
 python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
+alembic upgrade head
 pytest
 ```
 

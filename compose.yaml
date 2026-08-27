@@ -1,4 +1,13 @@
 services:
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      APP_DATABASE_URL: postgresql+asyncpg://calls:calls@postgres:5432/calls
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   api:
     build: .
     environment:
@@ -11,6 +20,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   postgres:
     image: postgres:16-alpine
