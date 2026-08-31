@@ -8,32 +8,63 @@
 </head>
 <body>
   <main class="shell">
-    <header>
+    <header class="topbar">
       <div>
         <p class="eyebrow">CALL INTELLIGENCE</p>
         <h1>Аналитика звонков</h1>
-        <p class="subtitle">Результаты разговоров, качество работы и конверсия в запись</p>
       </div>
-      <form id="tenant-form">
-        <label for="organization-id">Organization ID</label>
-        <div class="tenant-row">
-          <input id="organization-id" required placeholder="UUID организации">
-          <button>Показать</button>
-        </div>
-      </form>
+      <div class="header-actions">
+        <button id="refresh" class="secondary-button" type="button">Обновить</button>
+        <details class="organization-settings">
+          <summary>Организация</summary>
+          <form id="tenant-form">
+            <label for="organization-id">Organization ID</label>
+            <div class="tenant-row">
+              <input id="organization-id" required placeholder="UUID организации">
+              <button>Сохранить</button>
+            </div>
+          </form>
+        </details>
+      </div>
     </header>
 
-    <p id="message" class="message">Введите ID демонстрационной организации.</p>
+    <p id="message" class="message" aria-live="polite">Загружаем данные…</p>
 
     <section id="content" hidden>
-      <div class="kpis">
+      <section class="overview" aria-label="Загрузка и суть сервиса">
+        <article class="upload-card">
+          <div>
+            <p class="card-kicker">НОВЫЙ ЗВОНОК</p>
+            <h2>Загрузите MP3 для анализа</h2>
+            <p>Транскрипт, показатели и факт записи на приём появятся здесь после обработки.</p>
+          </div>
+          <form id="upload-form" class="upload-form">
+            <label class="file-input" for="audio-file">
+              <input id="audio-file" type="file" accept="audio/mpeg,.mp3" required>
+              <span id="file-name">Выбрать MP3</span>
+            </label>
+            <button id="upload-button" type="submit">Запустить анализ</button>
+          </form>
+          <p id="upload-status" class="upload-status" aria-live="polite">Файл до 50 МБ</p>
+        </article>
+        <article class="how-card">
+          <p class="card-kicker">КАК ЭТО РАБОТАЕТ</p>
+          <ol>
+            <li><span>01</span> Запись сохраняется и уходит в очередь</li>
+            <li><span>02</span> Локальная модель делает транскрипт и анализ</li>
+            <li><span>03</span> Dashboard показывает итог и запись на приём</li>
+          </ol>
+        </article>
+      </section>
+
+      <section class="kpis" aria-label="Ключевые показатели">
         <article><span>Всего звонков</span><strong id="total">—</strong></article>
         <article><span>Конверсия в запись</span><strong id="conversion">—</strong></article>
         <article><span>Средняя оценка</span><strong id="quality">—</strong></article>
         <article><span>Средняя длительность</span><strong id="duration">—</strong></article>
-      </div>
+      </section>
 
-      <div class="panels">
+      <section class="panels" aria-label="Распределения">
         <article class="panel">
           <div class="panel-title"><h2>Исходы записи</h2><span>завершённые звонки</span></div>
           <div id="appointments" class="bars"></div>
@@ -42,13 +73,13 @@
           <div class="panel-title"><h2>Статусы обработки</h2><span>все звонки</span></div>
           <div id="statuses" class="bars"></div>
         </article>
-      </div>
+      </section>
 
       <article class="panel calls-panel">
-        <div class="panel-title"><h2>Последние звонки</h2><span>до 20 записей</span></div>
+        <div class="panel-title"><h2>Последние звонки</h2><span>пять последних записей</span></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Звонок</th><th>Тема</th><th>Запись</th><th>Качество</th><th>Дата</th></tr></thead>
+            <thead><tr><th>Звонок</th><th>Тема</th><th>Запись</th><th>Качество</th><th>Статус</th></tr></thead>
             <tbody id="calls"></tbody>
           </table>
         </div>
